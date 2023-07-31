@@ -1,5 +1,5 @@
 import express from 'express';
-import {agregaUsuario, verUsuarioPorEmail,verTodosLosUsuarios , realizaTransferencia} from './consultas.js';
+import {agregaUsuario, verTodosLosUsuarios , realizaTransferencia, crearTablaUsuarios, crearTablaTransferencias} from './consultas.js';
 
 
 import { fileURLToPath } from 'url'
@@ -34,7 +34,6 @@ app.post('/usuario', async (req, res) => {
 // ====================================================================================         REALIZAR TRANSFERENCIA
 app.post('/transferencia', async (req, res) => {
     const { emisor, receptor, monto } = req.body;
-    console.log("Hola")
     try {
         const transferencia = await realizaTransferencia(emisor, receptor, monto);
         res.json(transferencia)
@@ -42,7 +41,6 @@ app.post('/transferencia', async (req, res) => {
         console.error('Error al intentar realizar una transferencia:', error);
     }
 });
-
 
 
 // ====================================================================================        VER TODOS LOS USUARIOS
@@ -55,34 +53,20 @@ app.get('/usuarios', async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log(`Servidor listo en puerto 3000`);
-});
-
-
-
-
-
-
-
-
-
-
-
-// ====================================================================================        LOGIN USUARIO POR MAIL
-app.post('/usuario/:email', async (req, res) => {
-    const email = req.params.email;
-    const {contrasena} = req.body;
+// ====================================================================================        VER TODOS LOS USUARIOS
+app.get('/tablas', async (req, res) => {
     try {
-        const usuario = await verUsuarioPorEmail(email);
-        if (usuario && usuario[0].contrasena === contrasena) {
-            res.json(usuario);
-          } else {
-            res.status(401).send('Contraseña incorrecta o usuario no encontrado');
-          }
+        await crearTablaUsuarios();
+        await crearTablaTransferencias();
+        res.json()
     } catch (error) {
-        console.error('Error al intentar mostrar todos los estudiantes:', error);
+        console.error('Error al intentar mostrar todos los usuarios:', error);
     }
 });
 
+
+
+app.listen(3000, () => {
+    console.log(`Servidor listo en puerto 3000`);
+});
 

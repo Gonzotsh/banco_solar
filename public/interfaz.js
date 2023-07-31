@@ -35,14 +35,26 @@ async function nuevoUsuario(e) {
             },
             body: JSON.stringify({ nombre, balance })
         };
-        await fetch('http://localhost:3000/usuario', opciones)
-        actualizarDOM()
-        nuevoNombre.value = ""
-        nuevoBalance.value = ""
-        Swal.fire({
-            icon: 'success',
-            html: 'Tu usuario ha sido creado exitosamente'
-        })
+        const respuesta =  await fetch('http://localhost:3000/usuario', opciones)
+        
+        if (respuesta.ok){
+            if(nombre != "" && balance != ""){
+                nuevoNombre.value = ''
+                nuevoBalance.value = ''
+                Swal.fire({
+                    icon: 'success',
+                    html: 'Tu usuario ha sido creado exitosamente'
+                })
+                await actualizarDOM()
+            }
+            else {
+                Swal.fire({
+                    icon: 'error',
+                    html: 'Debes ingresar un nombre de usuario y Balance'
+                })
+            }
+        }
+        
     } catch (error) {
         console.log('Error ===== >', error)
     }
@@ -66,26 +78,37 @@ async function nuevaTransferencia(e) {
         };
         await fetch('http://localhost:3000/transferencia', opciones)
 
-        DOMmonto.value = "";
+        if (respuesta.ok){
+            if(monto != ""){
+                DOMmonto.value = "";
 
-        Swal.fire({
-            icon: 'success',
-            html: 'Tu transferencia se realizó correctamente'
-        })
+                Swal.fire({
+                    icon: 'success',
+                    html: 'Tu transferencia se ha realizado exitosamente'
+                })
+                actualizarDOM()
+            }
+            else {
+                Swal.fire({
+                    icon: 'error',
+                    html: 'Debes ingresar el monto para realizar la transferencia'
+                })
+            }
+        }
+
     } catch (error) {
         console.log('Error ===== >', error)
     }
 }
 
-
+// ======================================================================================= MOSTRAR TODOS LOS USUARIOS
 async function actualizarDOM() {
     try {
         const todosLosUsuarios = await fetch(`http://localhost:3000/usuarios`);
         const listado = await todosLosUsuarios.json();
 
-
-        DOMemisor.innerHTML = ""
-        DOMreceptor.innerHTML = ""
+        DOMemisor.innerHTML = ''
+        DOMreceptor.innerHTML = ''
 
         tablaUsuarios.innerHTML = `
         <thead class="bg-danger text-white">
@@ -105,15 +128,11 @@ async function actualizarDOM() {
       `;
 
         listado.forEach(element => {
-            DOMemisor.innerHTML += `
-                <option value="${element.nombre}">${element.nombre}</option>
-            `
+            DOMemisor.innerHTML += `<option value="${element.nombre}">${element.nombre}</option>`
         });
 
         listado.forEach(element => {
-            DOMreceptor.innerHTML += `
-                <option value="${element.nombre}">${element.nombre}</option>
-            `
+            DOMreceptor.innerHTML += `<option value="${element.nombre}">${element.nombre}</option>`
         });
 
     } catch (error) {
@@ -121,72 +140,14 @@ async function actualizarDOM() {
     }
 }
 
-
-
-
-
-
-// =================================================================================== LOGIN USUARIO
-async function loginUsuario(e) {
-    e.preventDefault();
-    let email = buscarEmail.value, contrasena = buscarContrasena.value
-    if (email != '' && contrasena != '') {
-        try {
-            const resultado = await fetch(`http://localhost:3000/usuario/${email}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ contrasena }) // Enviar la contraseña en el cuerpo de la solicitud
-            })
-            if (resultado.ok) {
-                const usuario = await resultado.json()
-                DomUsuarioDatos.innerHTML = `Bienvenido nuevamente ${usuario[0].nombre}. Esta es la lista de usuarios creados<br><br>`
-                try {
-                    const todosLosUsuarios = await fetch(`http://localhost:3000/usuarios`)
-                    const listado = await todosLosUsuarios.json()
-                    tablaUsuarios.innerHTML = `
-                    <thead>
-                        <tr>
-                        <th scope="col">Nombre</th>
-                        <th scope="col">Email</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                        <th scope="row">1</th> `
-
-                    listado.forEach(element => {
-                        tablaUsuarios.innerHTML += `
-                            <td>${element.nombre}</td>
-                            <td>${element.email}</td>`
-                    });
-
-                    tablaUsuarios.innerHTML += `
-                    </tr>
-                    </tbody>`
-                } catch (error) {
-                    console.log(error)
-                }
-            }
-            else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    html: 'Contraseña incorrecta<br>Favor verificar los datos'
-                })
-            }
-        } catch (error) {
-            console.log("Error imprimiento", error)
-        }
-    }
-    else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            html: 'Debes ingresar email y contraseña'
-        })
+// ======================================================================== CREAR TABLAS SI ES QUE AÚN NO EXISTEN
+async function crearTablas() {
+    try {
+        await fetch(`http://localhost:3000/tablas`);
+        await actualizarDOM()
+    } catch (error) {
+        console.log(error);
     }
 }
 
-actualizarDOM()
+crearTablas()

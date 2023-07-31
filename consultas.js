@@ -13,6 +13,63 @@ const pool = new Pool({
 });
 
 
+// INSERTAR TABLAS SI NO EXISTEN AÚN
+export async function crearTablaUsuarios() {
+    pool.connect(async (err, client, release) => {
+        if (err) {
+            console.error('Error al conectar con la base de datos:', err.message, err.code);
+            return;
+        }
+        const queryInicialUsuarios = {
+            name: 'IniciarTablas',
+            text: `
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id SERIAL PRIMARY KEY,
+                    nombre VARCHAR(50) NOT NULL,
+                    balance INTEGER
+                );`
+        };
+        try {
+            const res = await client.query(queryInicialUsuarios);
+            release();
+        } catch (error) {
+            console.error(`Error al intentar crear la tabla usuarios: ${error.message}, Código de error: ${error.code}`);
+            release();
+        }
+    });
+};
+
+export async function crearTablaTransferencias() {
+    pool.connect(async (err, client, release) => {
+        if (err) {
+            console.error('Error al conectar con la base de datos:', err.message, err.code);
+            return;
+        }
+        
+        const queryInicialTransferencias = {
+            name: 'IniciarTablas',
+            text: `
+            CREATE TABLE IF NOT EXISTS transferencias (
+                id SERIAL PRIMARY KEY,
+                emisor VARCHAR(50) NOT NULL,
+                receptor VARCHAR(50) NOT NULL,
+                monto INTEGER NOT NULL,
+                fecha_transferencia TIMESTAMP DEFAULT NOW()
+            );`
+        };
+
+        try {
+            const res = await client.query(queryInicialTransferencias);
+            release();
+        } catch (error) {
+            console.error(`Error al intentar crear la tabla transferencias: ${error.message}, Código de error: ${error.code}`);
+            release();
+        }
+    });
+};
+
+
+
 // ===================================================================================  QUERY ----- AGREGAR USUARIO
 export async function agregaUsuario(nombre, balance) {
     pool.connect(async (err, client, release) => {
@@ -84,7 +141,7 @@ export async function verTodosLosUsuarios() {
                     resolve(usuarios);
                 })
                 .catch(error => {
-                    console.error(`Error al intentar mostrar todos los estudiantes: ${error.message}, Código de error: ${error.code}`);
+                    console.error(`Error al intentar mostrar todos los usuarios: ${error.message}, Código de error: ${error.code}`);
                     release();
                     reject(error);
                 });
